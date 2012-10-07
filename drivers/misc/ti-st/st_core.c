@@ -520,7 +520,10 @@ long st_register(struct st_proto_s *new_proto)
 	unsigned long flags = 0;
 
 	st_kim_ref(&st_gdata, 0);
+<<<<<<< HEAD
 	pr_info("%s(%d)\n", __func__, new_proto->chnl_id);
+=======
+>>>>>>> 114239f... drivers:misc: ti-st: fix potential NULL pointer dereference in st_register()
 	if (st_gdata == NULL || new_proto == NULL || new_proto->recv == NULL
 	    || new_proto->reg_complete_cb == NULL) {
 		pr_err("gdata/new_proto/recv or reg_complete_cb not ready\n");
