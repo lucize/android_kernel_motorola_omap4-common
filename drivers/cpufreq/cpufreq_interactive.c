@@ -737,11 +737,48 @@ static void cpufreq_interactive_boost(void)
 		wake_up_process(up_task);
 }
 
+<<<<<<< HEAD
 /*
  * Pulsed boost on input event raises CPUs to hispeed_freq and lets
  * usual algorithm of min_sample_time  decide when to allow speed
  * to drop.
  */
+=======
+static int cpufreq_interactive_notifier(
+	struct notifier_block *nb, unsigned long val, void *data)
+{
+	struct cpufreq_freqs *freq = data;
+	struct cpufreq_interactive_cpuinfo *pcpu;
+	int cpu;
+	unsigned long flags;
+
+	if (val == CPUFREQ_POSTCHANGE) {
+		pcpu = &per_cpu(cpuinfo, freq->cpu);
+		if (!down_read_trylock(&pcpu->enable_sem))
+			return 0;
+		if (!pcpu->governor_enabled) {
+			up_read(&pcpu->enable_sem);
+			return 0;
+		}
+
+		for_each_cpu(cpu, pcpu->policy->cpus) {
+			struct cpufreq_interactive_cpuinfo *pjcpu =
+				&per_cpu(cpuinfo, cpu);
+			if (cpu != freq->cpu) {
+				if (!down_read_trylock(&pjcpu->enable_sem))
+					continue;
+				if (!pjcpu->governor_enabled) {
+					up_read(&pjcpu->enable_sem);
+					continue;
+				}
+			}
+			spin_lock_irqsave(&pjcpu->load_lock, flags);
+			update_load(cpu);
+			spin_unlock_irqrestore(&pjcpu->load_lock, flags);
+			if (cpu != freq->cpu)
+				up_read(&pjcpu->enable_sem);
+		}
+>>>>>>> ded62ed... cpufreq: interactive: fix race on cpufreq TRANSITION notifier
 
 static void cpufreq_interactive_input_event(struct input_handle *handle,
 					    unsigned int type,
