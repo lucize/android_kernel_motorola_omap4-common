@@ -903,6 +903,7 @@ static int cpufreq_interactive_input_connect(struct input_handler *handler,
 	if (!handle)
 		return -ENOMEM;
 
+<<<<<<< HEAD
 	handle->dev = dev;
 	handle->handler = handler;
 	handle->name = "cpufreq_interactive";
@@ -917,6 +918,11 @@ static int cpufreq_interactive_input_connect(struct input_handler *handler,
 err:
 	kfree(handle);
 	return error;
+=======
+	ret += sprintf(buf + --ret, "\n");
+	spin_unlock_irqrestore(&target_loads_lock, flags);
+	return ret;
+>>>>>>> 15da7bb... cpufreq: interactive: fix show_target_loads and show_above_hispeed_delay
 }
 
 static void cpufreq_interactive_input_disconnect(struct input_handle *handle)
@@ -983,7 +989,7 @@ static ssize_t show_above_hispeed_delay(
 		ret += sprintf(buf + ret, "%u%s", above_hispeed_delay[i],
 			       i & 0x1 ? ":" : " ");
 
-	ret += sprintf(buf + ret, "\n");
+	ret += sprintf(buf + --ret, "\n");
 	spin_unlock_irqrestore(&above_hispeed_delay_lock, flags);
 	return ret;
 }
