@@ -912,6 +912,7 @@ static int cpufreq_interactive_input_connect(struct input_handler *handler,
 	if (error)
 		goto err;
 
+<<<<<<< HEAD
 	inputopen.handle = handle;
 	queue_work(down_wq, &inputopen.inputopen_work);
 	return 0;
@@ -920,6 +921,9 @@ err:
 	return error;
 =======
 	ret += sprintf(buf + --ret, "\n");
+=======
+	sprintf(buf + ret - 1, "\n");
+>>>>>>> ff548c9... cpufreq: interactive: fix compiling warnings
 	spin_unlock_irqrestore(&target_loads_lock, flags);
 	return ret;
 >>>>>>> 15da7bb... cpufreq: interactive: fix show_target_loads and show_above_hispeed_delay
@@ -989,7 +993,7 @@ static ssize_t show_above_hispeed_delay(
 		ret += sprintf(buf + ret, "%u%s", above_hispeed_delay[i],
 			       i & 0x1 ? ":" : " ");
 
-	ret += sprintf(buf + --ret, "\n");
+	sprintf(buf + ret - 1, "\n");
 	spin_unlock_irqrestore(&above_hispeed_delay_lock, flags);
 	return ret;
 }
