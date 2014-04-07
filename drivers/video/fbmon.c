@@ -1071,11 +1071,18 @@ void fb_edid_add_monspecs(unsigned char *edid, struct fb_monspecs *specs)
 	struct fb_videomode *m;
 	struct fb_audio *audiodb;
 	int num = 0, i;
+<<<<<<< HEAD
 	u8 sad[128 - 5];
 	u8 edt[(128 - 4) / DETAILED_TIMING_DESCRIPTION_SIZE];
 	u8 svd[CEA_MODEDB_SIZE-1];
 	u8 svd_native[CEA_MODEDB_SIZE-1];
 	u8 pos = 4, sad_n = 0, svd_n = 0;
+=======
+	u8 edt[(128 - 4) / DETAILED_TIMING_DESCRIPTION_SIZE];
+	u8 svd[CEA_MODEDB_SIZE-1];
+	u8 svd_native[CEA_MODEDB_SIZE-1];
+	u8 pos = 4, svd_n = 0;
+>>>>>>> ce52089... omap4-common: improve HDMI video-mode selection
 
 	if (!edid)
 		return;
@@ -1197,6 +1204,10 @@ void fb_edid_add_monspecs(unsigned char *edid, struct fb_monspecs *specs)
 				pr_debug("\tmarking it native\n");
 				m[i].flag |= FB_FLAG_NATIVE;
 			}
+<<<<<<< HEAD
+=======
+
+>>>>>>> ce52089... omap4-common: improve HDMI video-mode selection
 		}
 	}
 
