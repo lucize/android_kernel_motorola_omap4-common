@@ -417,8 +417,6 @@ static void fill_cache(struct dsscomp_dev *cdev)
 		blocking_notifier_chain_register(&dssdev->state_notifiers,
 						cdev->state_notifiers + i);
 	}
-//	dev_info(DEV(cdev), "found %d displays and %d overlays\n",
-//				cdev->num_displays, cdev->num_ovls);
 	dev_info(DEV(cdev), "found %d displays and %d overlays, WB overlay %d\n",
 				cdev->num_displays, cdev->num_ovls,
 				cdev->wb_ovl ? 1 : 0);

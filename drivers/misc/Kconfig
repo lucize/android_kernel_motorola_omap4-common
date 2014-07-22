@@ -692,5 +692,6 @@ source "drivers/misc/sec/Kconfig"
 source "drivers/misc/radio_ctrl/Kconfig"
 source "drivers/misc/ts27010mux/Kconfig"
 source "drivers/misc/gc-core/Kconfig"
+source "drivers/misc/cache-2dmanager/Kconfig"
 
 endif # MISC_DEVICES
