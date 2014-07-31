@@ -162,16 +162,18 @@ extern u32 omap_get_arm_rev(void);
 static inline unsigned int omap4_get_diagctrl0_errata_flags(void)
 {
 	unsigned int ret  = 0;
-	u32 arm_rev = omap_get_arm_rev();
 #ifdef CONFIG_OMAP4_ARM_ERRATA_742230
+	u32 arm_rev = omap_get_arm_rev();
 	if ((arm_rev >= 0x10) && (arm_rev <= 0x22))
 		ret |= (1 << 4);
 #endif
 #ifdef CONFIG_OMAP4_ARM_ERRATA_751472
+	u32 arm_rev = omap_get_arm_rev();
 	if (arm_rev < 0x30)	/* ARM revision less that r3p0 */
 		ret |= (1 << 11);
 #endif
 #ifdef CONFIG_OMAP4_ARM_ERRATA_743622
+	u32 arm_rev = omap_get_arm_rev();
 	if ((arm_rev & 0xF0) == 0x20)	/* All ARM rev r2px impacted */
 		ret |= (1 << 6);
 #endif

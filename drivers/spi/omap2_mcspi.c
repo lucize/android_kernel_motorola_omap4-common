@@ -364,7 +364,6 @@ static int omap2_mcspi_set_rxfifo(const struct spi_device *spi, int buf_size,
 static void omap2_mcspi_set_master_mode(struct spi_master *master)
 {
 	u32 l;
-	struct omap2_mcspi *mcspi = spi_master_get_devdata(master);
 
 	/* setup when switching from (reset default) slave mode
 	 * to single-channel master mode
@@ -373,6 +372,7 @@ static void omap2_mcspi_set_master_mode(struct spi_master *master)
 	MOD_REG_BIT(l, OMAP2_MCSPI_MODULCTRL_STEST, 0);
 	MOD_REG_BIT(l, OMAP2_MCSPI_MODULCTRL_MS, 0);
 #ifdef CONFIG_SPI_SW_CS
+	struct omap2_mcspi *mcspi = spi_master_get_devdata(master);
 	if (mcspi->force_cs_mode)
 		MOD_REG_BIT(l, OMAP2_MCSPI_MODULCTRL_SINGLE, 1);
 #else

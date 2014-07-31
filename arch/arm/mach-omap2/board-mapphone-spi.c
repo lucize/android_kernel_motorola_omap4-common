@@ -645,7 +645,7 @@ static struct cpcap_adc_ato mapphone_cpcap_adc_ato = {
 	.atox_ps_factor_out = 0,
 };
 
-static void ac_changed(struct power_supply *ac,
+/*static void ac_changed(struct power_supply *ac,
 			struct cpcap_batt_ac_data *ac_state)
 {
 #ifdef CONFIG_OMAP_PM_SRF
@@ -656,10 +656,10 @@ static void ac_changed(struct power_supply *ac,
 		return;
 
 	if (ac_state->online) {
-		/* To reduce OMAP Vdd1 DC/DC converter output voltage dips as
+*/		/* To reduce OMAP Vdd1 DC/DC converter output voltage dips as
 		 * much as possible, limit Vdd1 to OPP3-OPP5 when the phone is
 		 * connected to a charger. */
-		if (!requested)
+/*		if (!requested)
 			ret = resource_request("vdd1_opp", ac->dev, VDD1_OPP3);
 
 		if (!ret)
@@ -672,7 +672,7 @@ static void ac_changed(struct power_supply *ac,
 	}
 #endif
 }
-
+*/
 static void batt_changed(struct power_supply *batt,
 			 struct cpcap_batt_data *batt_state)
 {
@@ -989,7 +989,7 @@ static struct cpcap_platform_data mapphone_cpcap_data = {
 	.regulator_init = cpcap_regulator,
 	.adc_ato = &mapphone_cpcap_adc_ato,
 	.leds = &mapphone_cpcap_leds,
-	.ac_changed = NULL,
+//	.ac_changed = NULL,
 	.batt_changed = batt_changed,
 	.usb_changed = NULL,
 	.is_umts = 0,

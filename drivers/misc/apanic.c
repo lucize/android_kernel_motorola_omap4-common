@@ -95,7 +95,7 @@ static unsigned int get_bb(unsigned int block, unsigned int *bbt)
 	flag = 1 << (block%32);
 	return apanic_bbt[block/32] & flag;
 }
-
+/*
 static void alloc_bbt(struct mtd_info *mtd, unsigned int *bbt)
 {
 	int bbt_size;
@@ -115,7 +115,7 @@ static void scan_bbt(struct mtd_info *mtd, unsigned int *bbt)
 			set_bb(i, apanic_bbt);
 	}
 }
-
+*/
 #define APANIC_INVALID_OFFSET 0xFFFFFFFF
 
 static unsigned int phy_offset(struct mtd_info *mtd, unsigned int offset)
@@ -142,7 +142,7 @@ static void apanic_erase_callback(struct erase_info *done)
 	wait_queue_head_t *wait_q = (wait_queue_head_t *) done->priv;
 	wake_up(wait_q);
 }
-
+/*
 static int apanic_proc_read(char *buffer, char **start, off_t offset,
 			       int count, int *peof, void *dat)
 {
@@ -160,11 +160,11 @@ static int apanic_proc_read(char *buffer, char **start, off_t offset,
 	mutex_lock(&drv_mutex);
 
 	switch ((int) dat) {
-	case 1:	/* apanic_console */
+	case 1:	// apanic_console
 		file_length = ctx->curr.console_length;
 		file_offset = ctx->curr.console_offset;
 		break;
-	case 2:	/* apanic_threads */
+	case 2:	// apanic_threads
 		file_length = ctx->curr.threads_length;
 		file_offset = ctx->curr.threads_offset;
 		break;
@@ -179,8 +179,8 @@ static int apanic_proc_read(char *buffer, char **start, off_t offset,
 		return 0;
 	}
 
-	/* We only support reading a maximum of a flash page */
-	if (count > ctx->mtd->writesize)
+*/	/* We only support reading a maximum of a flash page */
+/*	if (count > ctx->mtd->writesize)
 		count = ctx->mtd->writesize;
 
 	page_no = (file_offset + offset) / ctx->mtd->writesize;
@@ -210,7 +210,7 @@ static int apanic_proc_read(char *buffer, char **start, off_t offset,
 	mutex_unlock(&drv_mutex);
 	return count;
 }
-
+*/
 static void mtd_panic_erase(void)
 {
 	struct apanic_data *ctx = &drv_ctx;
@@ -288,14 +288,15 @@ static void apanic_remove_proc_work(struct work_struct *work)
 	}
 	mutex_unlock(&drv_mutex);
 }
-
+/*
 static int apanic_proc_write(struct file *file, const char __user *buffer,
 				unsigned long count, void *data)
 {
 	schedule_work(&proc_removal_work);
 	return count;
 }
-
+*/
+#if defined(CONFIG_MTD)
 static void mtd_panic_notify_add(struct mtd_info *mtd)
 {
 	struct apanic_data *ctx = &drv_ctx;
@@ -401,7 +402,6 @@ static void mtd_panic_notify_remove(struct mtd_info *mtd)
 	}
 }
 
-#if defined(CONFIG_MTD)
 static struct mtd_notifier mtd_panic_notifier = {
 	.add	= mtd_panic_notify_add,
 	.remove	= mtd_panic_notify_remove,

@@ -1079,7 +1079,7 @@ static int __init pwrdms_setup(struct powerdomain *pwrdm, void *unused)
 
 	return ret;
 }
-
+#ifdef CONFIG_MOT_ENG_PHONE_RESET
 static int __init _voltdm_sum_time(struct voltagedomain *voltdm, void *user)
 {
 	struct omap_voltdm_pmic *pmic;
@@ -1098,7 +1098,7 @@ static int __init _voltdm_sum_time(struct voltagedomain *voltdm, void *user)
 
 	return 0;
 }
-
+#endif
 static u32 __init _usec_to_val_scrm(unsigned long rate, u32 usec,
 				    u32 shift, u32 mask)
 {
@@ -1140,7 +1140,6 @@ static void __init prcm_setup_regs(void)
 	struct clk *clk32k = clk_get(NULL, "sys_32k_ck");
 	unsigned long rate32k = 0;
 	u32 val, tshut, tstart;
-	u32 reset_delay_time = 0;
 
 	if (clk32k) {
 		rate32k = clk_get_rate(clk32k);
@@ -1202,6 +1201,7 @@ static void __init prcm_setup_regs(void)
 			OMAP4_SCRM_CLKSETUPTIME_OFFSET);
 
 #ifdef CONFIG_MOT_ENG_PHONE_RESET
+	u32 reset_delay_time = 0;
 	/*
 	 * Setup OMAP WARMRESET time:
 	 * we use the sum of each voltage domain setup times to handle

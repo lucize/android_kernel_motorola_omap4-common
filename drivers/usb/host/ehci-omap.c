@@ -1192,11 +1192,11 @@ static int ehci_omap_bus_resume(struct usb_hcd *hcd)
 	struct clk *clk;
 	int i;
 
-	int ret;
 
 	dev_dbg(dev, "ehci_omap_bus_resume\n");
 
 #ifndef CONFIG_USB_OOBWAKE
+	int ret;
 	oh = omap_hwmod_lookup(USBHS_EHCI_HWMODNAME);
 
 	if (oh)

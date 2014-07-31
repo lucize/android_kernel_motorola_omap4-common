@@ -207,6 +207,7 @@ static __initdata struct omap_pmic_description tps_pmic_desc = {
 	.pmic_lp_tshut = 1,	/* T-OFF 1ns rounded */
 	.pmic_lp_tstart = 1000,	/* T-start */
 };
+#ifdef CONFIG_TWL4030_CORE
 /**
  * _twl_i2c_rmw_u8() - Tiny helper function to do a read modify write for twl
  * @mod_no:	module number
@@ -230,7 +231,7 @@ static int __init _twl_i2c_rmw_u8(u8 mod_no, u8 mask, u8 value, u8 reg)
 out:
 	return ret;
 }
-
+#endif
 /**
  * omap4_twl_tps62361_enable() - Enable tps chip
  *
@@ -242,7 +243,6 @@ out:
 static int __init omap4_twl_tps62361_enable(struct voltagedomain *voltdm)
 {
 	int ret = 0;
-	int ret1;
 	u8 val;
 
 	/* Dont trust the bootloader. start with max, pm will set to proper */
@@ -287,6 +287,7 @@ static int __init omap4_twl_tps62361_enable(struct voltagedomain *voltdm)
 
 	/* if we have to work with TWL */
 #ifdef CONFIG_TWL4030_CORE
+	int ret1;
 	/* Map up SYSEN on TWL core to control TPS */
 	ret1 = _twl_i2c_rmw_u8(TWL6030_MODULE_ID0, TWL6030_BIT_APE_GRP |
 				TWL6030_BIT_MOD_GRP | TWL6030_BIT_CON_GRP,

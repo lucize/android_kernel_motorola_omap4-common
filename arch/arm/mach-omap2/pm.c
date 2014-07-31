@@ -298,7 +298,7 @@ err:
 	return ret;
 }
 
-static int __init boot_volt_scale(struct voltagedomain *voltdm,
+/*static int __init boot_volt_scale(struct voltagedomain *voltdm,
 				  unsigned long boot_v)
 {
 	struct omap_volt_data *vdata;
@@ -310,7 +310,7 @@ static int __init boot_volt_scale(struct voltagedomain *voltdm,
 			__func__, voltdm->name, boot_v);
 		return PTR_ERR(vdata);
 	}
-	/*
+*/	/*
 	 * DO NOT DO abb prescale -
 	 * case 1: OPP needs FBB, bootloader configured FBB
 	 *  - doing a prescale results in bypass -> system fail
@@ -321,7 +321,7 @@ static int __init boot_volt_scale(struct voltagedomain *voltdm,
 	 * case 4: OPP needs bypass, bootloader configured in bypass
 	 * - bypass programming in postscale skipped
 	 */
-	ret = voltdm_scale(voltdm, vdata);
+/*	ret = voltdm_scale(voltdm, vdata);
 	if (ret) {
 		pr_err("%s: Fail set voltage(v=%ld)on vdd%s\n",
 			__func__, boot_v, voltdm->name);
@@ -336,7 +336,7 @@ static int __init boot_volt_scale(struct voltagedomain *voltdm,
 	}
 	return ret;
 }
-
+*/
 /*
  * This API is to be called during init to put the various voltage
  * domains to the voltage as per the opp table. Typically we boot up

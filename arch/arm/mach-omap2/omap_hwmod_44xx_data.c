@@ -5004,10 +5004,10 @@ static struct omap_hwmod_class omap44xx_timer_hwmod_class = {
 };
 
 /* secure timer can assign this to .dev_attr field */
-static struct omap_secure_timer_dev_attr secure_timer_dev_attr = {
+/*static struct omap_secure_timer_dev_attr secure_timer_dev_attr = {
 	.is_secure_timer        = true,
 };
-
+*/
 /* timer1 */
 static struct omap_hwmod omap44xx_timer1_hwmod;
 static struct omap_hwmod_irq_info omap44xx_timer1_irqs[] = {

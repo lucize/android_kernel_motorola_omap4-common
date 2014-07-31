@@ -3152,7 +3152,7 @@ static int dsi_vc_send_bta(struct platform_device *dsidev, int channel)
 int dsi_vc_send_bta_sync(struct omap_dss_device *dssdev, int channel)
 {
 	struct platform_device *dsidev = dsi_get_dsidev_from_dssdev(dssdev);
-	int r = 0, i = 0;
+	int r = 0;
 	u32 err;
 	struct dsi_data *dsi = dsi_get_dsidrv_data(dsidev);
 

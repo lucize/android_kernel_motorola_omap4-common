@@ -502,7 +502,7 @@ static void *ts27010_mcc_data(u8 *frame)
 	return ((struct mcc_short_frame *)ts0710_pkt_data(frame))->value;
 }
 
-static int ts27010_send_fcon(struct ts0710_con *ts0710, int cr)
+/*static int ts27010_send_fcon(struct ts0710_con *ts0710, int cr)
 {
 	u8 frame[TS0710_MCC_FRAME_SIZE(0)];
 
@@ -521,7 +521,7 @@ static int ts27010_send_fcoff(struct ts0710_con *ts0710, int cr)
 
 	return ts0710_pkt_send(ts0710, frame);
 }
-
+*/
 static int ts27010_send_pn(struct ts0710_con *ts0710, u8 prior, int frame_size,
 			   u8 credit_flow, u8 credits, u8 dlci, u8 cr)
 {
@@ -734,7 +734,7 @@ static void ts27010_handle_mcc(struct ts0710_con *ts0710, u8 control,
 	}
 }
 
-static void ts0710_flow_on(u8 dlci, struct ts0710_con *ts0710)
+/*static void ts0710_flow_on(u8 dlci, struct ts0710_con *ts0710)
 {
 	int i;
 
@@ -753,15 +753,15 @@ static void ts0710_flow_on(u8 dlci, struct ts0710_con *ts0710)
 	datatty = dlci2tty[dlci].datatty;
 
 	if (cmdtty != datatty) {
-		/* Check AT cmd tty */
-		tty = mux_table[cmdtty];
+*/		/* Check AT cmd tty */
+/*		tty = mux_table[cmdtty];
 		if (mux_tty[cmdtty] && tty) {
 			if (test_bit(TTY_THROTTLED, &tty->flags))
 				return;
 		}
 
-		/* Check data tty */
-		tty = mux_table[datatty];
+*/		/* Check data tty */
+/*		tty = mux_table[datatty];
 		if (mux_tty[datatty] && tty) {
 			if (test_bit(TTY_THROTTLED, &tty->flags))
 				return;
@@ -812,7 +812,7 @@ static void ts0710_flow_off(struct tty_struct *tty, u8 dlci,
 		}
 	}
 }
-
+*/
 static void ts27010_handle_sabm(struct ts0710_con *ts0710, u8 control, int dlci)
 {
 	ts_debug(DBG_CMD, "ts27010: SABM received on dlci %d\n", dlci);

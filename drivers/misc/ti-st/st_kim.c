@@ -509,11 +509,11 @@ long st_kim_stop(void *kim_data)
 	struct kim_data_s	*kim_gdata = (struct kim_data_s *)kim_data;
 	struct ti_st_plat_data	*pdata =
 		kim_gdata->kim_pdev->dev.platform_data;
-	struct tty_struct	*tty = kim_gdata->core_data->tty;
 
 	INIT_COMPLETION(kim_gdata->ldisc_installed);
 
 #if 0
+	struct tty_struct	*tty = kim_gdata->core_data->tty;
 	if (tty) {	/* can be called before ldisc is installed */
 		/* Flush any pending characters in the driver and discipline. */
 		tty_ldisc_flush(tty);

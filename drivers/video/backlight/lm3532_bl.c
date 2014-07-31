@@ -604,7 +604,7 @@ int lm3532_register_init(struct lm3532_bl *data)
 
 static int lm3532_bl_init(struct lm3532_bl *data)
 {
-	struct lm3532_backlight_platform_data *pdata = data->pdata;
+//	struct lm3532_backlight_platform_data *pdata = data->pdata;
 	struct i2c_client *client = data->client;
 	int ret = 0;
 

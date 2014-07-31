@@ -605,7 +605,7 @@ err_dss_get:
 
 void dispc_runtime_put(void)
 {
-	struct powerdomain *dss_powerdomain = pwrdm_lookup("dss_pwrdm");
+
 	mutex_lock(&dispc.runtime_lock);
 
 	if (--dispc.runtime_count == 0) {
@@ -619,6 +619,7 @@ void dispc_runtime_put(void)
 		 * * (allowing for deeper power state)
 		 * */
 #if 0		/* STARGO: This causes panic */
+	struct powerdomain *dss_powerdomain = pwrdm_lookup("dss_pwrdm");
 		omap_pm_set_max_dev_wakeup_lat(
 				&dispc.pdev->dev,
 				&dispc.pdev->dev,

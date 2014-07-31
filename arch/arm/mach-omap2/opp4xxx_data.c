@@ -628,28 +628,6 @@ static struct omap_opp_def __initdata omap447x_opp_high_def_list[] = {
 	OPP_INITIALIZER("dss_dispc", "virt_lcd_pclk", "core", true, 170000000, OMAP4470_VDD_CORE_OPP100H_UV),
 };
 
-/**
- * omap4_mpu_opp_enable() - helper to enable the OPP
- * @freq:	frequency to enable
- */
-static void __init omap4_mpu_opp_enable(unsigned long freq)
-{
-	struct device *mpu_dev;
-	int r;
-
-	mpu_dev = omap2_get_mpuss_device();
-	if (!mpu_dev) {
-		pr_err("%s: no mpu_dev, did not enable f=%ld\n", __func__,
-			freq);
-		return;
-	}
-
-	r = opp_enable(mpu_dev, freq);
-	if (r < 0)
-		dev_err(mpu_dev, "%s: opp_enable failed(%d) f=%ld\n", __func__,
-			r, freq);
-}
-
 static void __init omap4_opp_enable(const char *oh_name, unsigned long freq)
 {
 	struct device *dev;
@@ -763,15 +741,6 @@ int __init omap4_opp_init(void)
 					ARRAY_SIZE(omap447x_opp_low_def_list));
 	}
 
-/*	if (!r) {
-		if (omap4_has_mpu_1_2ghz())
-			omap4_mpu_opp_enable(1200000000);
-		if (!trimmed)
-			pr_info("This is DPLL un-trimmed SOM. OPP is limited at 1.2 GHz\n");
-		if (omap4_has_mpu_1_5ghz() && trimmed)
-			omap4_mpu_opp_enable(1500000000);
-	}
-*/
 	if (r)
 		goto out;
 
