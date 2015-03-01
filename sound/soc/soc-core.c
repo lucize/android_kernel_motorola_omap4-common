@@ -709,10 +709,6 @@ dynamic:
 	return 0;
 
 config_err:
-	if (rtd->dai_link->ops && rtd->dai_link->ops->shutdown)
-		rtd->dai_link->ops->shutdown(substream);
-
-machine_err:
 	if (codec_dai->driver->ops->shutdown)
 		codec_dai->driver->ops->shutdown(substream, codec_dai);
 
@@ -724,6 +720,11 @@ platform_err:
 	if (cpu_dai->driver->ops->shutdown)
 		cpu_dai->driver->ops->shutdown(substream, cpu_dai);
 cpu_err:
+
+	if (rtd->dai_link->ops && rtd->dai_link->ops->shutdown)
+		rtd->dai_link->ops->shutdown(substream);
+
+machine_err:
 	if (rtd->dai_link->post)
 		rtd->dai_link->post(substream);
 out:
@@ -800,11 +801,11 @@ int soc_pcm_close(struct snd_pcm_substream *substream)
 	if (codec_dai->driver->ops->shutdown)
 		codec_dai->driver->ops->shutdown(substream, codec_dai);
 
-	if (rtd->dai_link->ops && rtd->dai_link->ops->shutdown)
-		rtd->dai_link->ops->shutdown(substream);
-
 	if (platform->driver->ops && platform->driver->ops->close)
 		platform->driver->ops->close(substream);
+
+	if (rtd->dai_link->ops && rtd->dai_link->ops->shutdown)
+		rtd->dai_link->ops->shutdown(substream);
 
 	if (rtd->dai_link->post)
 		rtd->dai_link->post(substream);
