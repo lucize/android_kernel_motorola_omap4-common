@@ -1109,40 +1109,25 @@ disconnect:
 }
 
 static int dsp_run_new_update(struct snd_soc_pcm_runtime *fe, int stream)
-//static int dsp_run_update(struct snd_soc_pcm_runtime *fe, int stream,
-//	int start, int stop)
 {
 	int ret;
-//	int ret = 0;
 
-//	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
-       ret = dsp_run_update_startup(fe, stream);
-       if (ret < 0)
-               dev_err(&fe->dev, "failed to startup some BEs\n");
-        fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_NO;
+	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
+	ret = dsp_run_update_startup(fe, stream);
+	if (ret < 0)
+	    dev_err(&fe->dev, "failed to startup some BEs\n");
+	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_NO;
 
-       return ret;
+	return ret;
 }
-//	/* startup any new BEs */
-//	if (start) {
-//		ret = dsp_run_update_startup(fe, stream);
-//		if (ret < 0)
-//			dev_err(&fe->dev, "failed to startup BEs\n");
-//	}
 
 static int dsp_run_old_update(struct snd_soc_pcm_runtime *fe, int stream)
 {
-       int ret;
-//	/* close down old BEs */
-//	if (stop) {
-//		ret = dsp_run_update_shutdown(fe, stream);
-//		if (ret < 0)
-//			dev_err(&fe->dev, "failed to shutdown BEs\n");
-//	}
-       fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
-       ret = dsp_run_update_shutdown(fe, stream);
-       if (ret < 0)
-               dev_err(&fe->dev, "failed to shutdown some BEs\n");
+	int ret;
+	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
+	ret = dsp_run_update_shutdown(fe, stream);
+	if (ret < 0)
+		dev_err(&fe->dev, "failed to shutdown some BEs\n");
 	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_NO;
 
 	return ret;
@@ -1183,62 +1168,40 @@ int soc_dsp_runtime_update(struct snd_soc_dapm_widget *widget)
 			goto capture;
 
                /* update new playback paths */
-//		/* update any playback paths */
 		start = dsp_add_new_paths(fe, SNDRV_PCM_STREAM_PLAYBACK, 1);
-               if (start) {
-                       dsp_run_new_update(fe, SNDRV_PCM_STREAM_PLAYBACK);
-                       fe_clear_pending(fe, SNDRV_PCM_STREAM_PLAYBACK);
-               }
-
-               /* update old playback paths */
-		stop = dsp_prune_old_paths(fe, SNDRV_PCM_STREAM_PLAYBACK, 1);
-               if (stop) {
-                       dsp_run_old_update(fe, SNDRV_PCM_STREAM_PLAYBACK);
-                       fe_clear_pending(fe, SNDRV_PCM_STREAM_PLAYBACK);
-                       be_disconnect(fe, SNDRV_PCM_STREAM_PLAYBACK);
-//		if (!(start || stop))
-//			goto capture;
-//
-//		/* run PCM ops on new/old playback paths */
-//		ret = dsp_run_update(fe, SNDRV_PCM_STREAM_PLAYBACK, start, stop);
-//		if (ret < 0) {
-//			dev_err(&fe->dev, "failed to update playback FE stream %s\n",
-//					fe->dai_link->stream_name);
+		if (start) {
+			dsp_run_new_update(fe, SNDRV_PCM_STREAM_PLAYBACK);
+			fe_clear_pending(fe, SNDRV_PCM_STREAM_PLAYBACK);
 		}
-//
-		/* free old playback links */
 
-		fe_clear_pending(fe, SNDRV_PCM_STREAM_PLAYBACK);
-		be_disconnect(fe, SNDRV_PCM_STREAM_PLAYBACK);
+		/* update old playback paths */
+		stop = dsp_prune_old_paths(fe, SNDRV_PCM_STREAM_PLAYBACK, 1);
+		if (stop) {
+			dsp_run_old_update(fe, SNDRV_PCM_STREAM_PLAYBACK);
+			fe_clear_pending(fe, SNDRV_PCM_STREAM_PLAYBACK);
+			be_disconnect(fe, SNDRV_PCM_STREAM_PLAYBACK);
+		}
+
 capture:
 		/* skip if FE doesn't have capture capability */
 		if (!fe->cpu_dai->driver->capture.channels_min)
 			continue;
 
                /* update new capture paths */
-//		/* update any capture paths */
 		start = dsp_add_new_paths(fe, SNDRV_PCM_STREAM_CAPTURE, 1);
-               if (start) {
-                       dsp_run_new_update(fe, SNDRV_PCM_STREAM_CAPTURE);
-                       fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
-               }
-
-               /* update old capture paths */
-		stop = dsp_prune_old_paths(fe, SNDRV_PCM_STREAM_CAPTURE, 1);
-               if (stop) {
-                       dsp_run_old_update(fe, SNDRV_PCM_STREAM_CAPTURE);
-                       fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
-                       be_disconnect(fe, SNDRV_PCM_STREAM_CAPTURE);
-//		if (!(start || stop))
-//			continue;
-//
-//		/* run PCM ops on new/old capture paths */
-//		ret = dsp_run_update(fe, SNDRV_PCM_STREAM_CAPTURE, start, stop);
-//		if (ret < 0) {
-//			dev_err(&fe->dev, "failed to update capture FE stream %s\n",
-//					fe->dai_link->stream_name);
+		if (start) {
+			dsp_run_new_update(fe, SNDRV_PCM_STREAM_CAPTURE);
+			fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
 		}
-//
+
+		/* update old capture paths */
+		stop = dsp_prune_old_paths(fe, SNDRV_PCM_STREAM_CAPTURE, 1);
+		if (stop) {
+			dsp_run_old_update(fe, SNDRV_PCM_STREAM_CAPTURE);
+			fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
+			be_disconnect(fe, SNDRV_PCM_STREAM_CAPTURE);
+		}
+
 		/* free old capture links */
 		fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
 		be_disconnect(fe, SNDRV_PCM_STREAM_CAPTURE);
