@@ -540,7 +540,7 @@ int dsscomp_apply(dsscomp_t comp)
 
 	dump_comp_info(cdev, d, "apply");
 
-	wb = omap_dss_get_wb(0); 
+	wb = omap_dss_get_wb(0);
 	wb->get_wb_info(wb, &wb_info);
 
 	r = 0;
