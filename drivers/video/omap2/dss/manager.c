@@ -384,28 +384,6 @@ static ssize_t manager_cpr_coef_store(struct omap_overlay_manager *mgr,
 	return size;
 }
 
-static ssize_t manager_ignore_sync_show(struct omap_overlay_manager *mgr,
-		char *buf)
-{
-	return snprintf(buf, PAGE_SIZE, "%d\n", mgr->ignore_sync);
-}
-
-static ssize_t manager_ignore_sync_store(struct omap_overlay_manager *mgr,
-		const char *buf, size_t size)
-{
-	int v;
-	int r;
-
-	r = kstrtoint(buf, 0, &v);
-	if (r)
-		return r;
-	if (v == 0 || v == 1) {
-		mgr->ignore_sync = v;
-		return size;
-	}
-	return -EINVAL;
-}
-
 struct manager_attribute {
 	struct attribute attr;
 	ssize_t (*show)(struct omap_overlay_manager *, char *);
@@ -437,9 +415,6 @@ static MANAGER_ATTR(cpr_enable, S_IRUGO|S_IWUSR,
 static MANAGER_ATTR(cpr_coef, S_IRUGO|S_IWUSR,
 		manager_cpr_coef_show,
 		manager_cpr_coef_store);
-static MANAGER_ATTR(ignore_sync, S_IRUGO|S_IWUSR,
-		manager_ignore_sync_show,
-		manager_ignore_sync_store);
 
 
 static struct attribute *manager_sysfs_attrs[] = {
@@ -452,7 +427,6 @@ static struct attribute *manager_sysfs_attrs[] = {
 	&manager_attr_alpha_blending_enabled.attr,
 	&manager_attr_cpr_enable.attr,
 	&manager_attr_cpr_coef.attr,
-	&manager_attr_ignore_sync.attr,
 	NULL
 };
 
@@ -725,9 +699,6 @@ static int dss_mgr_wait_for_vsync(struct omap_overlay_manager *mgr)
 	unsigned long timeout = msecs_to_jiffies(500);
 	u32 irq = 0; /* For non-supported panels will cause a timeout */
 	int r;
-
-	if (mgr->ignore_sync)
-		return 0;
 
 	switch (mgr->device->type) {
 	case OMAP_DISPLAY_TYPE_VENC:
@@ -1418,7 +1389,7 @@ static int configure_dispc(void)
 		 * always be turned off after frame, and new settings will be
 		 * taken in to use at next update */
 		if (!mc->manual_upd_display){
-			if (mc->skip_init)
+			if(mc->skip_init)
 				mc->skip_init = false;
 			else
 				dispc_go(i);
@@ -1851,8 +1822,11 @@ static int omap_dss_mgr_blank(struct omap_overlay_manager *mgr,
 {
 	struct overlay_cache_data *oc;
 	struct manager_cache_data *mc;
+	struct omap_dss_device *dev;
+	struct omap_dss_driver *drv;
 	unsigned long flags;
 	int r, r_get, i;
+	bool update = false;
 
 	DSSDBG("omap_dss_mgr_blank(%s,wait=%d)\n", mgr->name, wait_for_go);
 
@@ -1933,7 +1907,7 @@ static int omap_dss_mgr_blank(struct omap_overlay_manager *mgr,
 			pr_info("mgr_blank while GO is set");
 	}
 
-	if (r_get || !wait_for_go || mc->manual_upd_display) {
+	if (r_get || !wait_for_go) {
 		/* pretend that programming has happened */
 		for (i = 0; i < omap_dss_get_num_overlays(); ++i) {
 			oc = &dss_cache.overlay_cache[i];
@@ -1948,10 +1922,22 @@ static int omap_dss_mgr_blank(struct omap_overlay_manager *mgr,
 		dss_ovl_program_cb(&mc->cb, i);
 	}
 
+	if (wait_for_go) {
+		dev = mgr->device;
+		drv = dev->driver;
+		update = drv && mc->manual_upd_display;
+	}
+
 	spin_unlock_irqrestore(&dss_cache.lock, flags);
 
-	if (wait_for_go)
-		mgr->wait_for_go(mgr);
+	if (wait_for_go) {
+		if (update)
+			drv->update(mgr->device, 0, 0,
+						dev->panel.timings.x_res,
+						dev->panel.timings.y_res);
+		else
+			mgr->wait_for_go(mgr);
+	}
 
 	if (!r_get)
 		dispc_runtime_put();
@@ -2085,15 +2071,10 @@ static int omap_dss_mgr_apply(struct omap_overlay_manager *mgr)
 		oc->global_alpha = ovl->info.global_alpha;
 		oc->pre_mult_alpha = ovl->info.pre_mult_alpha;
 		oc->zorder = ovl->info.zorder;
-		/* Prevent div-by-zero panics by ensuring sane decim values */
-		oc->min_x_decim = (!ovl->info.min_x_decim) ? 1 :
-					ovl->info.min_x_decim;
-		oc->max_x_decim = (!ovl->info.max_x_decim) ? 1 :
-					ovl->info.max_x_decim;
-		oc->min_y_decim = (!ovl->info.min_y_decim) ? 1 :
-					ovl->info.min_y_decim;
-		oc->max_y_decim = (!ovl->info.max_y_decim) ? 1 :
-					ovl->info.max_y_decim;
+		oc->min_x_decim = ovl->info.min_x_decim;
+		oc->max_x_decim = ovl->info.max_x_decim;
+		oc->min_y_decim = ovl->info.min_y_decim;
+		oc->max_y_decim = ovl->info.max_y_decim;
 		oc->cconv = ovl->info.cconv;
 
 		oc->replication =
@@ -2538,7 +2519,6 @@ int dss_init_overlay_managers(struct platform_device *pdev)
 		mgr->wait_for_vsync = &dss_mgr_wait_for_vsync;
 		mgr->blank = &omap_dss_mgr_blank;
 		mgr->dump_cb = &seq_print_cbs;
-		mgr->ignore_sync = 0;
 
 		mgr->enable = &dss_mgr_enable;
 		mgr->disable = &dss_mgr_disable;
