@@ -46,8 +46,10 @@
 #define DISPC_IRQ_VID3_FIFO_UNDERFLOW	(1 << 20)
 #define DISPC_IRQ_ACBIAS_COUNT_STAT2	(1 << 21)
 #define DISPC_IRQ_FRAMEDONE2		(1 << 22)
+#define DISPC_IRQ_FRAMEDONEWB		(1 << 23)
 #define DISPC_IRQ_FRAMEDONE_WB		(1 << 23)
 #define DISPC_IRQ_FRAMEDONETV		(1 << 24)
+#define DISPC_IRQ_WBBUFFEROVERFLOW	(1 << 25)
 #define DISPC_IRQ_WBINCOMPLETE		(1 << 26)
 
 enum omap_dsi_data_type {
@@ -89,7 +91,7 @@ enum omap_plane {
 	OMAP_DSS_GFX	= 0,
 	OMAP_DSS_VIDEO1	= 1,
 	OMAP_DSS_VIDEO2	= 2,
-	OMAP_DSS_VIDEO3 = 3,
+	OMAP_DSS_VIDEO3	= 3,
 	OMAP_DSS_WB	= 4,
 };
 
@@ -119,6 +121,7 @@ enum omap_color_mode {
 	OMAP_DSS_COLOR_RGBX16		= 1 << 16, /* RGBx16 - 4444 */
 	OMAP_DSS_COLOR_ARGB16_1555	= 1 << 17, /* ARGB16 - 1555 */
 	OMAP_DSS_COLOR_XRGB16_1555	= 1 << 18, /* xRGB16 - 1555 */
+	OMAP_DSS_COLOR_BGRA32		= 1 << 19,  /* BGRA32 */
 };
 
 enum omap_lcd_display_type {
@@ -595,6 +598,18 @@ struct omap_writeback_info {
 	u32					p_uv_addr;
 	u8					rotation;
 	enum omap_dss_rotation_type		rotation_type;
+	bool force_1d;
+};
+
+/* HACK: omap_writeback_notifier used as temporary WA
+ * for WFD invalidation issue
+*/
+struct omap_writeback_notifier {
+        struct completion               completion;
+        u32                             sync_id;
+        int                             vsync_count;
+        bool                            is_done;
+        bool                            vsync_active;
 };
 
 struct omap_writeback {
@@ -607,6 +622,7 @@ struct omap_writeback {
 	struct mutex			lock;
 	struct omap_writeback_info	info;
 	struct completion		wb_completion;
+	struct omap_writeback_notifier	wb_done;
 
 	bool (*check_wb)(struct omap_writeback *wb);
 	int (*set_wb_info)(struct omap_writeback *wb,

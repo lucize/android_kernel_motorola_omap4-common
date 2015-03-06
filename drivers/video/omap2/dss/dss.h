@@ -440,9 +440,6 @@ void dispc_fake_vsync_irq(void);
 int dispc_runtime_get(void);
 void dispc_runtime_put(void);
 
-void dispc_save_context(void);
-void dispc_restore_context(void);
-
 void dispc_enable_sidle(void);
 void dispc_disable_sidle(void);
 
@@ -625,16 +622,6 @@ int omapdss_hdmi_unregister_cec_callbacks(void);
 int omap_dss_ovl_set_info(struct omap_overlay *ovl,
 		struct omap_overlay_info *info);
 
-/*#ifdef CONFIG_PANEL_MAPPHONE_OMAP4_HDTV
-#define FB_MODE_FLAG_DVI_AUDIO   (1 << 30)
-#define FB_MODE_FLAG_DSSMGR      (1 << 29)
-int omapdss_hdmi_display_enable(struct omap_dss_device *dssdev, int edid_only);
-int mapphone_omapdss_hdmi_get_edid(struct omap_dss_device *dssdev, u8 *edid, int len);
-int omapdss_set_hdmi_mode(struct omap_dss_device *dssdev, int code);
-int omapdss_set_hdmi_hpd(struct omap_dss_device *dssdev, bool enable);
-void omapdss_set_hdmi_test(int test);
-#endif
-*/
 /* RFBI */
 #ifdef CONFIG_OMAP2_DSS_RFBI
 int rfbi_init_platform_driver(void);
