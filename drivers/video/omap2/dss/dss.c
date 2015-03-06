@@ -102,7 +102,7 @@ static inline u32 dss_read_reg(const struct dss_reg idx)
 #define RR(reg) \
 	dss_write_reg(DSS_##reg, dss.ctx[(DSS_##reg).idx / sizeof(u32)])
 
-void dss_save_context(void)
+static void dss_save_context(void)
 {
 	DSSDBG("dss_save_context\n");
 
@@ -119,7 +119,7 @@ void dss_save_context(void)
 	DSSDBG("context saved\n");
 }
 
-void dss_restore_context(void)
+static void dss_restore_context(void)
 {
 	DSSDBG("dss_restore_context\n");
 

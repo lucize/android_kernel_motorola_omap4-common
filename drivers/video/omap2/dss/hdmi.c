@@ -578,11 +578,6 @@ static void hdmi_set_l3_cstr(struct omap_dss_device *dssdev, bool enable)
 	DSSINFO("%s c-state constraint for HDMI\n\n",
 		enable ? "Set" : "Release");
 
-/*	if (enable)
-		pm_qos_add_request(&pm_qos_handle, PM_QOS_CPU_DMA_LATENCY, 100);
-	else
-		pm_qos_remove_request(&pm_qos_handle);
-*/
 	if (enable != pm_qos_handle_added) {
 		if (enable)
 			pm_qos_add_request(&pm_qos_handle,

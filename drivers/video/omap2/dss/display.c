@@ -360,14 +360,14 @@ int omapdss_default_get_recommended_bpp(struct omap_dss_device *dssdev)
 {
 	switch (dssdev->type) {
 	case OMAP_DISPLAY_TYPE_DPI:
-		if (dssdev->phy.dpi.data_lines == 24)
+		if (dssdev->phy.dpi.data_lines > 16)
 			return 24;
 		else
 			return 16;
 
 	case OMAP_DISPLAY_TYPE_DBI:
 	case OMAP_DISPLAY_TYPE_DSI:
-		if (dssdev->ctrl.pixel_size == 24)
+		if (dssdev->ctrl.pixel_size > 16)
 			return 24;
 		else
 			return 16;
@@ -500,13 +500,8 @@ static int dss_suspend_device(struct device *dev, void *data)
 	int r;
 	struct omap_dss_device *dssdev = to_dss_device(dev);
 
-	/* Ignore manual power control devices */
-	if (dssdev->manual_power_control != OMAP_DSS_MPC_DISABLED)
-		return 0;
-
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE) {
 		dssdev->activate_after_resume = false;
-		return 0;
 	}
 
 	if (!dssdev->driver->suspend) {
@@ -544,10 +539,6 @@ static int dss_resume_device(struct device *dev, void *data)
 	int r;
 	struct omap_dss_device *dssdev = to_dss_device(dev);
 
-	/* Ignore manual power control devices */
-	if (dssdev->manual_power_control != OMAP_DSS_MPC_DISABLED)
-		return 0;
-
 	if (dssdev->activate_after_resume && dssdev->driver->resume) {
 		r = dssdev->driver->resume(dssdev);
 		if (r)
@@ -570,8 +561,6 @@ static void save_all_ctx(void)
 	DSSDBG("save context\n");
 	dss_runtime_get();
 
-//	dss_save_context();
-
 	/*
 	 * There is use case user space MME app need to disable ovl,
 	 * but it might call down to display driver after display is
@@ -591,8 +580,6 @@ static void restore_all_ctx(void)
 {
 	DSSDBG("restore context\n");
 	dss_runtime_get();
-
-//	dss_restore_context();
 
 	dss_runtime_put();
 }
