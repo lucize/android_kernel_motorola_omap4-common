@@ -570,7 +570,7 @@ static void save_all_ctx(void)
 	DSSDBG("save context\n");
 	dss_runtime_get();
 
-	dss_save_context();
+//	dss_save_context();
 
 	/*
 	 * There is use case user space MME app need to disable ovl,
@@ -592,7 +592,7 @@ static void restore_all_ctx(void)
 	DSSDBG("restore context\n");
 	dss_runtime_get();
 
-	dss_restore_context();
+//	dss_restore_context();
 
 	dss_runtime_put();
 }

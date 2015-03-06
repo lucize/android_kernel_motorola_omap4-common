@@ -108,7 +108,7 @@ static ssize_t overlay_manager_store(struct omap_overlay *ovl, const char *buf,
 		}
 
 		r = old_mgr->apply(old_mgr);
-		if (r && (r != -ENODEV)) /* Allow the disabled case */
+		if (r)
 			goto err;
 	}
 
@@ -613,6 +613,21 @@ int dss_check_overlay(struct omap_overlay *ovl, struct omap_dss_device *dssdev)
 		return -EINVAL;
 	}
 
+	/* OMAP44xx limitation: in Stallmode, when the frame pixel size
+	 * is less than output SyncFifo depth(16) DISPC hangs without
+	 * sending any data. Observation is: when width/height less than 4/5
+	 * no FRAMEDONE INQ ever received for such frame
+	 */
+	if ((info->width < 4 || info->height < 5) &&
+		info->color_mode == OMAP_DSS_COLOR_NV12 ||
+		info->color_mode == OMAP_DSS_COLOR_YUV2 ||
+		info->color_mode == OMAP_DSS_COLOR_UYVY)
+		if (dssdev->type == OMAP_DISPLAY_TYPE_DSI &&
+			dssdev->phy.dsi.type == OMAP_DSS_DSI_TYPE_CMD_MODE &&
+			cpu_is_omap44xx())  {
+			DSSWARN("too small frame on VID%d dropped\n", ovl->id);
+			return -EINVAL;
+		}
 	return 0;
 }
 
@@ -646,8 +661,6 @@ static int omap_dss_set_manager(struct omap_overlay *ovl,
 
 	ovl->manager = mgr;
 
-	if (dispc_runtime_get())
-		DSSERR("dispc_runtime_get failed to enable clks.\n");
 	/* XXX: When there is an overlay on a DSI manual update display, and
 	 * the overlay is first disabled, then moved to tv, and enabled, we
 	 * seem to get SYNC_LOST_DIGIT error.
@@ -661,7 +674,7 @@ static int omap_dss_set_manager(struct omap_overlay *ovl,
 	 * the overlay, but before moving the overlay to TV.
 	 */
 	dispc_set_channel_out(ovl->id, mgr->id);
-	dispc_runtime_put();
+
 	return 0;
 }
 
