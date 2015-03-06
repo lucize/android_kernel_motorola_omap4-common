@@ -47,8 +47,8 @@
 #include <linux/notifier.h>
 #include <plat/clock.h>
 
-#define OMAP_I2C_MASTER_CLOCK		96000000
-#define OMAP_I2C_DPLL_CLOCK		49152000
+#define OMAP_I2C_MASTER_CLOCK          96000000
+#define OMAP_I2C_DPLL_CLOCK            49152000
 #endif
 
 /* I2C controller revisions */
@@ -61,10 +61,6 @@
 
 /* timeout waiting for the controller to respond */
 #define OMAP_I2C_TIMEOUT (msecs_to_jiffies(1000))
-#define MAX_I2C_TIMEOUT_COUNT 15
-
-static int i2c2_timeout_count;
-static int i2c4_timeout_count;
 
 /* For OMAP3 I2C_IV has changed to I2C_WE (wakeup enable) */
 enum {
@@ -91,7 +87,6 @@ enum {
 	OMAP_I2C_IRQSTATUS,
 	OMAP_I2C_IRQENABLE_SET,
 	OMAP_I2C_IRQENABLE_CLR,
-	OMAP_I2C_SYSC,
 };
 
 /* I2C Interrupt Enable Register (OMAP_I2C_IE): */
@@ -196,6 +191,7 @@ struct omap_i2c_dev {
 						 * if set, should be trsh+1
 						 */
 	u8			rev;
+	bool			shutdown;
 	unsigned		b_hw:1;		/* bad h/w fixes */
 	unsigned		idle:1;
 	u16			iestate;	/* Saved interrupt register */
@@ -206,9 +202,9 @@ struct omap_i2c_dev {
 	u16			westate;
 	u16			errata;
 #ifdef CONFIG_OMAP4_DPLL_CASCADING
-	struct notifier_block	nb;
-	int			dpll_entry;
-	int			dpll_exit;
+	struct notifier_block   nb;
+	int                     dpll_entry;
+	int                     dpll_exit;
 	unsigned long		i2c_fclk_rate;
 	spinlock_t		dpll_lock;
 #endif
@@ -258,7 +254,6 @@ const static u8 omap4_reg_map[] = {
 	[OMAP_I2C_IRQSTATUS] = 0x28,
 	[OMAP_I2C_IRQENABLE_SET] = 0x2c,
 	[OMAP_I2C_IRQENABLE_CLR] = 0x30,
-	[OMAP_I2C_SYSC] = 0x10,
 };
 
 static inline void omap_i2c_write_reg(struct omap_i2c_dev *i2c_dev,
@@ -272,50 +267,6 @@ static inline u16 omap_i2c_read_reg(struct omap_i2c_dev *i2c_dev, int reg)
 {
 	return __raw_readw(i2c_dev->base +
 				(i2c_dev->regs[reg] << i2c_dev->reg_shift));
-}
-
-static void omap_i2c_dump_registers(struct omap_i2c_dev *i2c_dev,
-						const char *stage)
-{
-	dev_err(i2c_dev->dev, "On %s, registers are:", stage);
-	dev_err(i2c_dev->dev, "OMAP_I2C_REVNB_LO = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_REVNB_LO));
-	dev_err(i2c_dev->dev, "OMAP_I2C_REVNB_HI = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_REVNB_HI));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SYSC=%04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SYSC));
-	dev_err(i2c_dev->dev, "OMAP_I2C_IRQSTATUS_RAW = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_IRQSTATUS_RAW));
-	dev_err(i2c_dev->dev, "OMAP_I2C_IRQSTATUS = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_IRQSTATUS));
-	dev_err(i2c_dev->dev, "OMAP_I2C_IRQENABLE_SET = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_IRQENABLE_SET));
-	dev_err(i2c_dev->dev, "OMAP_I2C_IRQENABLE_CLR = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_IRQENABLE_CLR));
-	dev_err(i2c_dev->dev, "OMAP_I2C_WE_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_WE_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SYSS_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SYSS_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_BUF_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_BUF_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_CNT_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_CNT_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_CON_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_CON_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_OA_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_OA_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SA_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SA_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_PSC_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_PSC_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SCLL_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SCLL_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SCLH_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SCLH_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_SYSTEST_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_SYSTEST_REG));
-	dev_err(i2c_dev->dev, "OMAP_I2C_BUFSTAT_REG = %04X",
-		omap_i2c_read_reg(i2c_dev, OMAP_I2C_BUFSTAT_REG));
 }
 
 static int omap_i2c_hwspinlock_lock(struct omap_i2c_dev *dev)
@@ -682,40 +633,10 @@ static int omap_i2c_xfer_msg(struct i2c_adapter *adap,
 	dev->buf_len = 0;
 	if (r == 0) {
 		dev_err(dev->dev, "controller timed out\n");
-
-		/*
-		 * IKHSS6UPGR-14022: Hack to reboot the phone when
-		 * we start getting contineous i2c timeout errors.
-		 * Only handling timeouts for i2c-2 and i2c-4 on which
-		 * timeouts have been reported.
-		 */
-		if (adap->nr == 2) {
-			if (++i2c2_timeout_count > MAX_I2C_TIMEOUT_COUNT) {
-				omap_i2c_dump_registers(dev, "I2C-2 Timeouts");
-				panic("Unrecoverable I2C-2 HW timeouts");
-			}
-		}
-
-		if (adap->nr == 4) {
-			if (++i2c4_timeout_count > MAX_I2C_TIMEOUT_COUNT) {
-				omap_i2c_dump_registers(dev, "I2C-4 Timeouts");
-				panic("Unrecoverable I2C-4 HW timeouts");
-			}
-		}
-
-		omap_i2c_dump_registers(dev, "Before reset");
 		omap_i2c_reset(dev);
-		omap_i2c_dump_registers(dev, "After reset, before init");
 		omap_i2c_init(dev);
-		omap_i2c_dump_registers(dev, "After init");
 		return -ETIMEDOUT;
 	}
-
-	if (adap->nr == 2)
-		i2c2_timeout_count = 0;
-
-	if (adap->nr == 4)
-		i2c4_timeout_count = 0;
 
 	if (likely(!dev->cmd_err))
 		return 0;
@@ -735,6 +656,7 @@ static int omap_i2c_xfer_msg(struct i2c_adapter *adap,
 			w |= OMAP_I2C_CON_STP;
 			omap_i2c_write_reg(dev, OMAP_I2C_CON_REG, w);
 		}
+		omap_i2c_init(dev);
 		return -EREMOTEIO;
 	}
 	return -EIO;
@@ -751,9 +673,9 @@ static void omap_i2c_dpll_configure(struct omap_i2c_dev *dev,
 	u16 fsscll = 0, fssclh = 0, hsscll = 0, hssclh = 0;
 
 	/*
-	 * FIXME: check I2C_HAS_FASTMODE_PLUS feature
-	 * when dev->speed > 1000
-	 */
+	* FIXME: check I2C_HAS_FASTMODE_PLUS feature
+	* when dev->speed > 1000
+	*/
 	if (dev->speed > 400)
 		internal_clk = 19200;
 	else if (dev->speed > 100)
@@ -858,6 +780,9 @@ omap_i2c_xfer(struct i2c_adapter *adap, struct i2c_msg msgs[], int num)
 	pdev = container_of(dev->dev, struct platform_device, dev);
 	pdata = pdev->dev.platform_data;
 #endif
+
+	if (dev->shutdown)
+		return -EPERM;
 
 	r = omap_i2c_hwspinlock_lock(dev);
 	/* To-Do: if we are unable to acquire the lock, we must
@@ -1069,7 +994,7 @@ omap_i2c_isr(int this_irq, void *dev_id)
 	u16 stat, w;
 	int err, count = 0;
 
-	if (dev->idle)
+	if (dev->idle || dev->shutdown)
 		return IRQ_NONE;
 
 	while ((stat = (omap_i2c_read_reg(dev, OMAP_I2C_STAT_REG))) & dev->iestate) {
@@ -1430,6 +1355,30 @@ omap_i2c_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#define PMIC_I2C_NAME "omap_i2c.1"
+static void
+omap_i2c_shutdown(struct platform_device *pdev)
+{
+	struct omap_i2c_dev	*dev = platform_get_drvdata(pdev);
+
+	/* Keep pmic i2c alive - for pm_power_off case */
+	if (!strcmp(dev_name(dev->dev), PMIC_I2C_NAME))
+			return;
+
+	/* Shutdown all other i2c controllers */
+	pm_runtime_get_sync(&pdev->dev);
+	omap_i2c_write_reg(dev, OMAP_I2C_CON_REG, 0);
+	/* Keep interrupts disabled */
+	free_irq(dev->irq, dev);
+	if (cpu_is_omap44xx() && dev->rev >= OMAP_I2C_REV_ON_4430)
+		omap_i2c_write_reg(dev, OMAP_I2C_IRQENABLE_CLR, 0x6FFF);
+	else
+		omap_i2c_write_reg(dev, OMAP_I2C_IE_REG, 0);
+	pm_runtime_put_sync(&pdev->dev);
+
+	dev->shutdown = true;
+}
+
 #ifdef CONFIG_SUSPEND
 static int omap_i2c_suspend(struct device *dev)
 {
@@ -1464,6 +1413,7 @@ static struct platform_driver omap_i2c_driver = {
 		.owner	= THIS_MODULE,
 		.pm	= OMAP_I2C_PM_OPS,
 	},
+	.shutdown	= omap_i2c_shutdown,
 };
 
 /* I2C may be needed to bring up other drivers */
