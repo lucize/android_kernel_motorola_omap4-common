@@ -63,6 +63,9 @@ static struct {
 	struct platform_device *pdev;
 	void __iomem    *base;
 
+	struct mutex	runtime_lock;
+	int		runtime_count;
+
 	struct clk	*dpll4_m4_ck;
 	struct clk	*dss_clk;
 	struct clk      *dss_fck;
@@ -784,7 +787,9 @@ static int omap_dsshw_probe(struct platform_device *pdev)
 	if (r)
 		goto err_clocks;
 
-	/* pm_runtime_enable(&pdev->dev);*/
+	mutex_init(&dss.runtime_lock);
+
+	pm_runtime_enable(&pdev->dev);
 
 	r = dss_runtime_get();
 	if (r)
