@@ -1115,8 +1115,8 @@ static int dsp_run_new_update(struct snd_soc_pcm_runtime *fe, int stream)
 	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
 	ret = dsp_run_update_startup(fe, stream);
 	if (ret < 0)
-	    dev_err(&fe->dev, "failed to startup some BEs\n");
-	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_NO;
+		dev_err(&fe->dev, "failed to startup some BEs\n");
+        fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_NO;
 
 	return ret;
 }
@@ -1124,6 +1124,7 @@ static int dsp_run_new_update(struct snd_soc_pcm_runtime *fe, int stream)
 static int dsp_run_old_update(struct snd_soc_pcm_runtime *fe, int stream)
 {
 	int ret;
+
 	fe->dsp[stream].runtime_update = SND_SOC_DSP_UPDATE_BE;
 	ret = dsp_run_update_shutdown(fe, stream);
 	if (ret < 0)
@@ -1167,7 +1168,7 @@ int soc_dsp_runtime_update(struct snd_soc_dapm_widget *widget)
 		if (!fe->cpu_dai->driver->playback.channels_min)
 			goto capture;
 
-               /* update new playback paths */
+		/* update new playback paths */
 		start = dsp_add_new_paths(fe, SNDRV_PCM_STREAM_PLAYBACK, 1);
 		if (start) {
 			dsp_run_new_update(fe, SNDRV_PCM_STREAM_PLAYBACK);
@@ -1187,7 +1188,7 @@ capture:
 		if (!fe->cpu_dai->driver->capture.channels_min)
 			continue;
 
-               /* update new capture paths */
+		/* update new capture paths */
 		start = dsp_add_new_paths(fe, SNDRV_PCM_STREAM_CAPTURE, 1);
 		if (start) {
 			dsp_run_new_update(fe, SNDRV_PCM_STREAM_CAPTURE);
@@ -1201,10 +1202,6 @@ capture:
 			fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
 			be_disconnect(fe, SNDRV_PCM_STREAM_CAPTURE);
 		}
-
-		/* free old capture links */
-		fe_clear_pending(fe, SNDRV_PCM_STREAM_CAPTURE);
-		be_disconnect(fe, SNDRV_PCM_STREAM_CAPTURE);
 	}
 
 	mutex_unlock(&widget->dapm->card->dsp_mutex);
@@ -1218,7 +1215,6 @@ int soc_dsp_be_digital_mute(struct snd_soc_pcm_runtime *fe, int mute)
 	list_for_each_entry(dsp_params,
 			&fe->dsp[SNDRV_PCM_STREAM_PLAYBACK].be_clients, list_be) {
 
-		
 		struct snd_soc_pcm_runtime *be = dsp_params->be;
 		struct snd_soc_dai *dai = be->codec_dai;
 		struct snd_soc_dai_driver *drv = dai->driver;
@@ -1669,8 +1665,7 @@ static ssize_t soc_dsp_show_state(struct snd_soc_pcm_runtime *fe,
 
 		offset += snprintf(buf + offset, size - offset,
 				"   State: %s\n",
-                               dsp_state_string(be->dsp[stream].state));
-//				dsp_state_string(fe->dsp[stream].state));
+				dsp_state_string(be->dsp[stream].state));
 
 		if ((be->dsp[stream].state >= SND_SOC_DSP_STATE_HW_PARAMS) &&
 		    (be->dsp[stream].state <= SND_SOC_DSP_STATE_STOP))

@@ -562,6 +562,15 @@ int soc_pcm_open(struct snd_pcm_substream *substream)
 	if (rtd->dai_link->no_host_mode == SND_SOC_DAI_LINK_NO_HOST)
 		snd_soc_set_runtime_hwparams(substream, &no_host_hardware);
 
+	if (rtd->dai_link->ops && rtd->dai_link->ops->startup) {
+		ret = rtd->dai_link->ops->startup(substream);
+		if (ret < 0) {
+			printk(KERN_ERR "asoc: %s startup failed\n",
+				rtd->dai_link->name);
+			goto machine_err;
+		}
+	}
+
 	/* startup the audio subsystem */
 	if (cpu_dai->driver->ops->startup) {
 		ret = cpu_dai->driver->ops->startup(substream, cpu_dai);
@@ -586,14 +595,6 @@ int soc_pcm_open(struct snd_pcm_substream *substream)
 			printk(KERN_ERR "asoc: can't open codec %s\n",
 				codec_dai->name);
 			goto codec_dai_err;
-		}
-	}
-
-	if (rtd->dai_link->ops && rtd->dai_link->ops->startup) {
-		ret = rtd->dai_link->ops->startup(substream);
-		if (ret < 0) {
-			printk(KERN_ERR "asoc: %s startup failed\n", rtd->dai_link->name);
-			goto machine_err;
 		}
 	}
 
@@ -711,7 +712,6 @@ platform_err:
 	if (cpu_dai->driver->ops->shutdown)
 		cpu_dai->driver->ops->shutdown(substream, cpu_dai);
 cpu_err:
-
 	if (rtd->dai_link->ops && rtd->dai_link->ops->shutdown)
 		rtd->dai_link->ops->shutdown(substream);
 
@@ -1122,16 +1122,16 @@ EXPORT_SYMBOL(snd_soc_card_get_codec);
 
 int snd_soc_card_active_links(struct snd_soc_card *card)
 {
-       int i;
-       int count = 0;
+	int i;
+	int count = 0;
 
-       for (i = 0; i < card->num_rtd; i++) {
-               /* count FEs: dynamic and legacy */
-               if (!card->rtd[i].dai_link->no_pcm)
-                       count += card->rtd[i].dai_link->active;
-       }
+	for (i = 0; i < card->num_rtd; i++) {
+		/* count FEs: dynamic and legacy */
+		if (!card->rtd[i].dai_link->no_pcm)
+			count += card->rtd[i].dai_link->active;
+	}
 
-       return count;
+	return count;
 }
 EXPORT_SYMBOL(snd_soc_card_active_links);
 
@@ -2161,23 +2161,20 @@ static void snd_soc_instantiate_card(struct snd_soc_card *card)
 		 "%s", card->name);
 	snprintf(card->snd_card->longname, sizeof(card->snd_card->longname),
 		 "%s", card->long_name ? card->long_name : card->name);
-       snprintf(card->snd_card->driver, sizeof(card->snd_card->driver),
-                "%s", card->driver_name ? card->driver_name : card->name);
-       for (i = 0; i < ARRAY_SIZE(card->snd_card->driver); i++) {
-               switch (card->snd_card->driver[i]) {
-               case '_':
-               case '-':
-               case '\0':
-                       break;
-               default:
-                       if (!isalnum(card->snd_card->driver[i]))
-                               card->snd_card->driver[i] = '_';
-                       break;
-               }
-       }
-//	if (card->driver_name)
-//		strlcpy(card->snd_card->driver, card->driver_name,
-//			sizeof(card->snd_card->driver));
+	snprintf(card->snd_card->driver, sizeof(card->snd_card->driver),
+		 "%s", card->driver_name ? card->driver_name : card->name);
+	for (i = 0; i < ARRAY_SIZE(card->snd_card->driver); i++) {
+		switch (card->snd_card->driver[i]) {
+		case '_':
+		case '-':
+		case '\0':
+			break;
+		default:
+			if (!isalnum(card->snd_card->driver[i]))
+				card->snd_card->driver[i] = '_';
+			break;
+		}
+	}
 
 	if (card->late_probe) {
 		ret = card->late_probe(card);

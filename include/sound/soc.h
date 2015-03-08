@@ -765,7 +765,6 @@ struct snd_soc_dai_link {
 
 	/* machine stream operations */
 	struct snd_soc_ops *ops;
-
 };
 
 struct snd_soc_codec_conf {
