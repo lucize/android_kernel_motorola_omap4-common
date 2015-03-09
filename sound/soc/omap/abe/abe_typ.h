@@ -353,6 +353,7 @@ typedef u32 abe_patch_rev;
  */
 #define EVENT_TIMER 0
 #define EVENT_44100 1
+#define EVENT_48000 2
 /*
  *	SERIAL PORTS IDs - abe_mcbsp_id
  */

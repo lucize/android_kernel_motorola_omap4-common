@@ -336,6 +336,7 @@
  */
 #define EVENT_TIMER 0
 #define EVENT_44100 1
+#define EVENT_48000 1
 /*
  * DMA requests
  */
@@ -672,5 +673,6 @@ void abe_add_subroutine(u32 *id, abe_subroutine2 f,
 
 u32 abe_plug_subroutine(u32 *id, abe_subroutine2 f, u32 n,
 			u32 *params);
+void abe_write_select_pdm_output(u32 path);
 
 #endif				/* _ABE_MAIN_H_ */

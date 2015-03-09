@@ -1649,7 +1649,20 @@ u32 abe_dma_port_copy_subroutine_id(u32 port_id)
 			break;
 		case SIX_MSB:
 			if (port_id == OMAP_ABE_PDM_DL_PORT) {
-				sub_id = COPY_MCPDM_DL_CFPID;
+				/* McPDM default output mode selection
+				 * 1 - Separate headset (DL1) and handsfree (DL2) paths
+				 *     => Need OPP100 for Handsfree output
+				 * 2 - DL1 on handsfree path and mute headset
+				 * 3 - DL1 on both headset and handsfree
+				 */
+				if (abe->mcpdm_path == 1)
+					sub_id = COPY_MCPDM_DL_CFPID;
+				else if (abe->mcpdm_path == 2)
+					sub_id = COPY_MCPDM_DL_HF_PDL1_CFPID;
+				else if (abe->mcpdm_path == 3)
+					sub_id = COPY_MCPDM_DL_HF_PDL2_CFPID;
+				else
+					sub_id = COPY_MCPDM_DL_CFPID;
 				break;
 			}
 			if (port_id == OMAP_ABE_MM_UL_PORT) {

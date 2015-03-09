@@ -97,6 +97,8 @@
 #define EVENT_GENERATOR_COUNTER_DEFAULT (2048-1)
 /* PLL output/desired sampling rate = (32768 * 6000)/88200 */
 #define EVENT_GENERATOR_COUNTER_44100 (2228-1)
+//fixme set correct values later
+#define EVENT_GENERATOR_COUNTER_48000 (2298-1)
 /* start / stop the EVENT generator */
 #define EVENT_GENERATOR_START 0x6C
 #define EVENT_GENERATOR_ON 1

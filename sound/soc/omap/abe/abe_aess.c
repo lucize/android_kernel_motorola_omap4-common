@@ -132,6 +132,13 @@ int omap_abe_write_event_generator(struct omap_abe *abe, u32 e)
 		event = 0;
 		counter = EVENT_GENERATOR_COUNTER_44100;
 		break;
+	case EVENT_48000:
+		selection = EVENT_SOURCE_COUNTER;
+		event = 0;
+		counter = EVENT_GENERATOR_COUNTER_48000;
+		break;
+
+
 	default:
 		omap_abe_dbg_error(abe, OMAP_ABE_ERR_API, ABE_BLOCK_COPY_ERR);
 	}

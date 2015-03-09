@@ -826,6 +826,20 @@ u32 abe_reset_dl2_src_filters(void)
 EXPORT_SYMBOL(abe_reset_dl2_src_filters);
 
 /**
+* abe_write_select_pdm_output - Select the path for OPP25 route input
+*
+* Parameters:
+*   path: 1 for output om headset, 2 for output on handsfree,
+*      3 for output on headset and handsfree at the same time
+*
+*/
+void abe_write_select_pdm_output(u32 path)
+{
+	abe->mcpdm_path = path;
+}
+EXPORT_SYMBOL(abe_write_select_pdm_output);
+
+/**
 * abe_reset_bt_dl_src_filters - reset BT DL path filters
 *
 * it is assumed that filters are located in SMEM
