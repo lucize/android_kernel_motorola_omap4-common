@@ -135,6 +135,7 @@
 #define EIGHT_MSB 11
 #define NINE_MSB 12
 #define TEN_MSB 13
+#define MONO_16_16 14
 /*
  *	PORT PROTOCOL TYPE - abe_port_protocol_switch_id
  */
@@ -336,7 +337,7 @@
  */
 #define EVENT_TIMER 0
 #define EVENT_44100 1
-#define EVENT_48000 1
+#define EVENT_48000 2
 /*
  * DMA requests
  */
@@ -660,13 +661,6 @@ u32 abe_read_port_address(u32 port, abe_dma_t *dma2);
 void abe_add_subroutine(u32 *id, abe_subroutine2 f, u32 nparam, u32 *params);
 u32 abe_read_next_ping_pong_buffer(u32 port, u32 *p, u32 *n);
 void abe_write_pdmdl_offset(u32 path, u32 offset_left, u32 offset_right);
-u32 abe_reset_vx_ul_src_filters(void);
-u32 abe_reset_mic_ul_src_filters(void);
-u32 abe_reset_vx_dl_src_filters(void);
-u32 abe_reset_dl1_src_filters(void);
-u32 abe_reset_dl2_src_filters(void);
-u32 abe_reset_bt_dl_src_filters(void);
-void abe_src_filters_saturation_monitoring(void);
 u32 abe_check_activity(void);
 void abe_add_subroutine(u32 *id, abe_subroutine2 f,
 						u32 nparam, u32 *params);

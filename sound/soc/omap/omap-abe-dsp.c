@@ -2456,7 +2456,8 @@ static int aess_hw_params(struct snd_pcm_substream *substream,
 
 	if (format.f == 44100)
 		abe_write_event_generator(EVENT_44100);
-//test 48000 support
+
+// test 48000 support
 	if (format.f == 48000)
 		abe_write_event_generator(EVENT_48000);
 
