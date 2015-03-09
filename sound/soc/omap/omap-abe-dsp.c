@@ -797,6 +797,7 @@ static int volume_put_gain(struct snd_kcontrol *kcontrol,
 	int lval = ucontrol->value.integer.value[0];
 	int rval = ucontrol->value.integer.value[1];
 	int ramp = RAMP_2MS;
+
 	do_volume_put_gain(mc, lval, rval, ramp);
 
 	return 1;
@@ -2455,7 +2456,7 @@ static int aess_hw_params(struct snd_pcm_substream *substream,
 
 	if (format.f == 44100)
 		abe_write_event_generator(EVENT_44100);
-
+//test 48000 support
 	if (format.f == 48000)
 		abe_write_event_generator(EVENT_48000);
 

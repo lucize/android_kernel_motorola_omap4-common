@@ -205,5 +205,6 @@ config SND_OMAP_SOC_MOTSND
 	select SND_OMAP_SOC_MCASP
 	select SND_OMAP_SOC_ABE
 	select SND_OMAP_SOC_ABE_DSP
+	select SND_OMAP_SOC_VXREC
 	help
 	  Say Y if building Motorola Android Platform
