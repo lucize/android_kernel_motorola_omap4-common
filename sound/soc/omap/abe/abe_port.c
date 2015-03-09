@@ -175,6 +175,12 @@ void omap_abe_clean_temporary_buffers(struct omap_abe *abe, u32 id)
 		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
 				   OMAP_ABE_S_MM_DL_ADDR,
 				   OMAP_ABE_S_MM_DL_SIZE);
+		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
+				   OMAP_ABE_S_MM_DL_44P1_ADDR,
+				   OMAP_ABE_S_MM_DL_44P1_SIZE);
+		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
+				   OMAP_ABE_S_MM_DL_44P1_XK_ADDR,
+				   OMAP_ABE_S_MM_DL_44P1_XK_SIZE);
 		omap_abe_reset_gain_mixer(abe, MIXDL1, MIX_DL1_INPUT_MM_DL);
 		omap_abe_reset_gain_mixer(abe, MIXDL2, MIX_DL2_INPUT_MM_DL);
 		break;
@@ -210,6 +216,12 @@ void omap_abe_clean_temporary_buffers(struct omap_abe *abe, u32 id)
 		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
 				   OMAP_ABE_S_TONES_ADDR,
 				   OMAP_ABE_S_TONES_SIZE);
+		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
+				   OMAP_ABE_S_TONES_44P1_ADDR,
+				   OMAP_ABE_S_TONES_44P1_SIZE);
+		omap_abe_reset_mem(abe, OMAP_ABE_SMEM,
+				   OMAP_ABE_S_TONES_44P1_XK_ADDR,
+				   OMAP_ABE_S_TONES_44P1_XK_SIZE);
 		omap_abe_reset_gain_mixer(abe, MIXDL1, MIX_DL1_INPUT_TONES);
 		omap_abe_reset_gain_mixer(abe, MIXDL2, MIX_DL2_INPUT_TONES);
 		break;
@@ -530,6 +542,8 @@ void omap_abe_enable_pp_io_task(struct omap_abe *abe, u32 id)
 		/* MM_DL managed in ping-pong */
 		abe->MultiFrame[TASK_IO_MM_DL_SLT][TASK_IO_MM_DL_IDX] =
 			ABE_TASK_ID(C_ABE_FW_TASK_IO_PING_PONG);
+		abe->MultiFrame[18][1] =
+			ABE_TASK_ID(C_ABE_FW_TASK_SRC44P1_MMDL_PP);
 		omap_abe_mem_write(abe, OMAP_ABE_DMEM,
 			       OMAP_ABE_D_MULTIFRAME_ADDR, (u32 *) abe->MultiFrame,
 			       sizeof(abe->MultiFrame));
@@ -550,6 +564,7 @@ void omap_abe_disable_pp_io_task(struct omap_abe *abe, u32 id)
 	if (OMAP_ABE_MM_DL_PORT == id) {
 		/* MM_DL managed in ping-pong */
 		abe->MultiFrame[TASK_IO_MM_DL_SLT][TASK_IO_MM_DL_IDX] = 0;
+		abe->MultiFrame[18][1] = 0;
 		omap_abe_mem_write(abe, OMAP_ABE_DMEM,
 			       OMAP_ABE_D_MULTIFRAME_ADDR, (u32 *) abe->MultiFrame,
 			       sizeof(abe->MultiFrame));
@@ -1087,7 +1102,7 @@ void abe_init_io_tasks(u32 id, abe_data_format_t *format,
 		has its own SIO descriptor format */
 		/*
 		   Sequence of operations on ping-pong buffers B0/B1
-		   -------------- time ---------------------------->>>>
+		   -------------- time ----------------------------
 		   Host Application is ready to send data from DDR to B0
 		   SDMA is initialized from "abe_connect_irq_ping_pong_port" to B0
 		   FIRMWARE starts with #12 B1 data,
@@ -1105,7 +1120,7 @@ void abe_init_io_tasks(u32 id, abe_data_format_t *format,
 		case OMAP_ABE_TONES_DL_PORT:
 			break;
 		case OMAP_ABE_PDM_UL_PORT:
-			abe->MultiFrame[5][2] = ABE_TASK_ID(C_ABE_FW_TASK_IO_PDM_UL);
+			abe->MultiFrame[0][0] = ABE_TASK_ID(C_ABE_FW_TASK_IO_PDM_UL);
 			break;
 		case OMAP_ABE_DMIC_PORT:
 			abe->MultiFrame[2][5] = ABE_TASK_ID(C_ABE_FW_TASK_IO_DMIC);
@@ -1118,9 +1133,13 @@ void abe_init_io_tasks(u32 id, abe_data_format_t *format,
 		case OMAP_ABE_MM_UL2_PORT:
 			break;
 		case OMAP_ABE_VX_DL_PORT:
-			abe->MultiFrame[0][2] =	ABE_TASK_ID(C_ABE_FW_TASK_IO_VX_DL);
+			abe->MultiFrame[22][2] =		ABE_TASK_ID(C_ABE_FW_TASK_IO_VX_DL);
 			/* check for 8kHz/16kHz */
 			if (abe_port[id].format.f == 8000) {
+				abe->MultiFrame[21][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_RIGHT_8K);
+				abe->MultiFrame[23][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_LEFT_8K);
 				abe->MultiFrame[TASK_VX_DL_SLT][TASK_VX_DL_IDX] =
 					ABE_TASK_ID(C_ABE_FW_TASK_VX_DL_8_48_FIR);
 				/*Voice_8k_DL_labelID */
@@ -1143,7 +1162,11 @@ void abe_init_io_tasks(u32 id, abe_data_format_t *format,
 				} else {
 					/* Do nothing, Scheduling Table has already been patched */
 				}
-			} else {
+			} else if (abe_port[id].format.f == 16000) {			/* 16000Hz sampling*/
+				abe->MultiFrame[21][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_RIGHT_16K);
+				abe->MultiFrame[23][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_LEFT_16K);
 				abe->MultiFrame[TASK_VX_DL_SLT][TASK_VX_DL_IDX] =
 					ABE_TASK_ID(C_ABE_FW_TASK_VX_DL_16_48);
 				/* Voice_16k_DL_labelID */
@@ -1166,12 +1189,22 @@ void abe_init_io_tasks(u32 id, abe_data_format_t *format,
 				} else {
 					/* Do nothing, Scheduling Table has already been patched */
 				}
+			} else {
+				abe->MultiFrame[TASK_ASRC_VX_DL_SLT][TASK_ASRC_VX_DL_IDX] = 0;		/* Disable asrc task */
+				abe->MultiFrame[TASK_VX_DL_SLT][TASK_VX_DL_IDX] = 0;
+				/* Buffer in SMEM at 48KHz*/
+				smem1 = VX_DL_labelID;
+
 			}
 			break;
 		case OMAP_ABE_VX_UL_PORT:
 			abe->MultiFrame[16][3] = ABE_TASK_ID(C_ABE_FW_TASK_IO_VX_UL);
 			/* check for 8kHz/16kHz */
 			if (abe_port[id].format.f == 8000) {
+				abe->MultiFrame[21][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_RIGHT_8K);
+				abe->MultiFrame[23][2] =
+					ABE_TASK_ID(C_ABE_FW_TASK_CHECK_IIR_LEFT_8K);
 				abe->MultiFrame[TASK_VX_UL_SLT][TASK_VX_UL_IDX] =
 					ABE_TASK_ID(C_ABE_FW_TASK_VX_UL_48_8);
 				/* MultiFrame[TASK_ECHO_SLT][TASK_ECHO_IDX] =
@@ -1557,6 +1590,8 @@ void abe_format_switch(abe_data_format_t *f, u32 *iter, u32 *mulfac)
 		break;
 	}
 	*iter = (n_freq * (*mulfac));
+	if (f->samp_format == MONO_16_16)
+		*iter /= 2;
 }
 /**
  * abe_dma_port_iteration
@@ -1618,6 +1653,9 @@ u32 abe_dma_port_copy_subroutine_id(u32 port_id)
 		case STEREO_16_16:
 			sub_id = D2S_STEREO_16_16_CFPID;
 			break;
+		case MONO_16_16:
+			sub_id = D2S_MONO_16_16_CFPID;
+			break;
 		case STEREO_MSB:
 			sub_id = D2S_STEREO_MSB_CFPID;
 			break;
@@ -1643,6 +1681,9 @@ u32 abe_dma_port_copy_subroutine_id(u32 port_id)
 			break;
 		case STEREO_16_16:
 			sub_id = S2D_STEREO_16_16_CFPID;
+			break;
+		case MONO_16_16:
+			sub_id = S2D_MONO_16_16_CFPID;
 			break;
 		case STEREO_MSB:
 			sub_id = S2D_STEREO_MSB_CFPID;
