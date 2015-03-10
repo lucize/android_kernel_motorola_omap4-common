@@ -321,7 +321,6 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 	}
 
 	if (core_next_state < PWRDM_POWER_ON) {
-//	if (core_next_state < PWRDM_POWER_INACTIVE) {
 		/*
 		 * Note: IVA can hit RET outside of cpuidle and hence this is
 		 * not the right optimal place to enable IVA AUTO RET. But since
@@ -360,7 +359,6 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 		}
 
 		omap_temp_sensor_prepare_idle();
-//		omap4_trigger_ioctrl();
 	}
 
 	if (omap4_device_next_state_off()) {
@@ -411,7 +409,6 @@ void omap4_enter_sleep(unsigned int cpu, unsigned int power_state, bool suspend)
 
 abort_device_off:
 	if (core_next_state < PWRDM_POWER_ON) {
-//	if (core_next_state < PWRDM_POWER_INACTIVE) {
 		/* See note above */
 		omap_vc_set_auto_trans(core_voltdm,
 				OMAP_VC_CHANNEL_AUTO_TRANSITION_DISABLE);
@@ -868,9 +865,6 @@ static int omap4_restore_pwdms_after_suspend(void)
 		 */
 		if (pwrst->saved_state > cstate)
 			continue;
-
-//		if (pwrst->pwrdm->pwrsts)
-//			omap_set_pwrdm_state(pwrst->pwrdm, pwrst->saved_state);
 
 		if (pwrst->pwrdm->pwrsts_logic_ret)
 			pwrdm_set_logic_retst(pwrst->pwrdm,
