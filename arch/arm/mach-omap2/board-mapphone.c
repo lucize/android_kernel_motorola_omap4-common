@@ -698,7 +698,7 @@ static void __init mapphone_voltage_init(void)
 
 	/* Read CTRL_FUSE_OPP_VDD_MPU_3 to check whether it is 1.2G supported */
 	if (omap_readl(0x4A00224C) & 0xFFFFFF)
-		omap4_features |= OMAP4_HAS_MPU_1_2GHZ;
+		omap_all_features |= OMAP4_HAS_MPU_1_2GHZ;
 
 	node = of_find_node_by_path("/System@0/PwrMgmt@0");
 	if (node) {
@@ -727,7 +727,7 @@ static void __init mapphone_voltage_init(void)
 		val = of_get_property(node, "limit_1_0_ghz", NULL);
 		if (val != NULL) {
 			if (*val)
-				omap4_features &= ~OMAP4_HAS_MPU_1_2GHZ;
+				omap_all_features &= ~OMAP4_HAS_MPU_1_2GHZ;
 		}
 
 
