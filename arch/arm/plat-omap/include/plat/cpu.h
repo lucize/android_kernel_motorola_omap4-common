@@ -592,7 +592,8 @@ void omap5xxx_check_features(void);
  *    indicates that the chip does support OS-level control of this
  *    feature.
  */
-extern u32 omap_all_features;
+extern u32 omap_features;
+extern u32 omap3_features;
 
 #define OMAP3_HAS_L2CACHE		BIT(0)
 #define OMAP3_HAS_IVA			BIT(1)
@@ -612,7 +613,7 @@ extern u32 omap_all_features;
 #define OMAP3_HAS_FEATURE(feat,flag)			\
 static inline unsigned int omap3_has_ ##feat(void)	\
 {							\
-	return omap_all_features & OMAP3_HAS_ ##flag;	\
+	return omap3_features & OMAP3_HAS_ ##flag;	\
 }							\
 
 OMAP3_HAS_FEATURE(l2cache, L2CACHE)
@@ -628,7 +629,7 @@ OMAP3_HAS_FEATURE(io_chain_ctrl, IO_CHAIN_CTRL)
 /*
  * Runtime detection of OMAP4 features
  */
-//extern u32 omap4_features;
+extern u32 omap4_features;
 
 #define OMAP4_HAS_MPU_1GHZ		BIT(0)
 #define OMAP4_HAS_MPU_1_2GHZ		BIT(1)
@@ -640,7 +641,7 @@ OMAP3_HAS_FEATURE(io_chain_ctrl, IO_CHAIN_CTRL)
 #define OMAP4_HAS_FEATURE(feat, flag)			\
 static inline unsigned int omap4_has_ ##feat(void)	\
 {							\
-	return omap_all_features & OMAP4_HAS_ ##flag;	\
+	return omap4_features & OMAP4_HAS_ ##flag;	\
 }							\
 
 OMAP4_HAS_FEATURE(perf_silicon, PERF_SILICON)
@@ -653,10 +654,12 @@ OMAP4_HAS_FEATURE(iva_500mhz, IVA_500MHZ)
 /*
  * Runtime detection of OMAP5 features
  */
+extern u32 omap5_features;
+
 #define OMAP5_HAS_FEATURE(feat, flag)			\
 static inline unsigned int omap5_has_ ##feat(void)	\
 {							\
-	return omap_all_features & OMAP5_HAS_ ##flag;	\
+	return omap5_features & OMAP5_HAS_ ##flag;	\
 }							\
 
 OMAP5_HAS_FEATURE(opp_high, OPP_HIGH)
@@ -669,7 +672,7 @@ OMAP5_HAS_FEATURE(avs, AVS)
 #define OMAP_HAS_FEATURE(feat, flag)			\
 static inline unsigned int omap_has_ ##feat(void)	\
 {							\
-	return omap_all_features & OMAP_HAS_ ##flag;	\
+	return omap_features & OMAP_HAS_ ##flag;	\
 }							\
 
 OMAP_HAS_FEATURE(gc320, GC320)

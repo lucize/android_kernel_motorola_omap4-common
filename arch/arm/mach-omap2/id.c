@@ -31,9 +31,8 @@
 static struct omap_chip_id omap_chip;
 static unsigned int omap_revision;
 
-//u32 omap3_features;
-//u32 omap4_features;
-u32 omap_all_features;
+u32 omap3_features;
+u32 omap4_features;
 
 unsigned int omap_rev(void)
 {
@@ -199,14 +198,14 @@ static void __init omap24xx_check_revision(void)
 #define OMAP3_CHECK_FEATURE(status,feat)				\
 	if (((status & OMAP3_ ##feat## _MASK) 				\
 		>> OMAP3_ ##feat## _SHIFT) != FEAT_ ##feat## _NONE) { 	\
-		omap_all_features |= OMAP3_HAS_ ##feat;			\
+		omap3_features |= OMAP3_HAS_ ##feat;			\
 	}
 
 static void __init omap3_check_features(void)
 {
 	u32 status;
 
-	omap_all_features = 0;
+	omap3_features = 0;
 
 	status = omap_ctrl_readl(OMAP3_CONTROL_OMAP_STATUS);
 
@@ -216,11 +215,11 @@ static void __init omap3_check_features(void)
 	OMAP3_CHECK_FEATURE(status, NEON);
 	OMAP3_CHECK_FEATURE(status, ISP);
 	if (cpu_is_omap3630())
-		omap_all_features |= OMAP3_HAS_192MHZ_CLK;
+		omap3_features |= OMAP3_HAS_192MHZ_CLK;
 	if (!cpu_is_omap3505() && !cpu_is_omap3517())
-		omap_all_features |= OMAP3_HAS_IO_WAKEUP;
+		omap3_features |= OMAP3_HAS_IO_WAKEUP;
 
-	omap_all_features |= OMAP3_HAS_SDRC;
+	omap3_features |= OMAP3_HAS_SDRC;
 
 	/*
 	 * TODO: Get additional info (where applicable)
@@ -232,7 +231,7 @@ static void __init omap4_check_features(void)
 {
 	u32 si_type;
 
-	omap_all_features = 0;
+	omap4_features = 0;
 
 	si_type =
 	  (read_tap_reg(OMAP4_CTRL_MODULE_CORE_STD_FUSE_PROD_ID_1) >> 16) & 3;
@@ -241,23 +240,23 @@ static void __init omap4_check_features(void)
 	case OMAP4_SILICON_TYPE_PERFORMANCE:
 		/* High performance device */
 		if (cpu_is_omap443x())
-			omap_all_features |= OMAP4_HAS_MPU_1_2GHZ;
+			omap4_features |= OMAP4_HAS_MPU_1_2GHZ;
 		else if (cpu_is_omap446x() || cpu_is_omap447x()) {
-			omap_all_features |= OMAP4_HAS_MPU_1_5GHZ;
-			omap_all_features |= OMAP4_HAS_IVA_500MHZ;
+			omap4_features |= OMAP4_HAS_MPU_1_5GHZ;
+			omap4_features |= OMAP4_HAS_IVA_500MHZ;
 		}
 		/* Fall through to Standard device features */
 	case OMAP4_SILICON_TYPE_STANDARD:
 	default:
 		/* Standard device */
 		if (cpu_is_omap443x())
-			omap_all_features |= OMAP4_HAS_MPU_1GHZ;
+			omap4_features |= OMAP4_HAS_MPU_1GHZ;
 		else if (cpu_is_omap446x()) {
-			omap_all_features |= OMAP4_HAS_MPU_1_2GHZ;
-			omap_all_features |= OMAP4_HAS_IVA_430MHZ;
+			omap4_features |= OMAP4_HAS_MPU_1_2GHZ;
+			omap4_features |= OMAP4_HAS_IVA_430MHZ;
 		} else if (cpu_is_omap447x()) {
-			omap_all_features |= OMAP4_HAS_MPU_1_3GHZ;
-			omap_all_features |= OMAP4_HAS_IVA_430MHZ;
+			omap4_features |= OMAP4_HAS_MPU_1_3GHZ;
+			omap4_features |= OMAP4_HAS_IVA_430MHZ;
 		}
 		break;
 	}
@@ -265,7 +264,7 @@ static void __init omap4_check_features(void)
 
 static void __init ti816x_check_features(void)
 {
-	omap_all_features = OMAP3_HAS_NEON;
+	omap3_features = OMAP3_HAS_NEON;
 }
 
 static void __init omap3_check_revision(void)
