@@ -151,6 +151,7 @@
  * Hence rounding it to a lesser value.
  */
 #define ADMA_MAX_XFER_PER_ROW (60 * 1024)
+#define ADMA_MAX_BLKS_PER_ROW (ADMA_MAX_XFER_PER_ROW / 512)
 
 
 #define AUTO_CMD12		(1 << 0)	/* Auto CMD12 support */
@@ -176,6 +177,9 @@
 #define OMAP_MMC_DISABLED_TIMEOUT	1
 #define OMAP_MMC_SLEEP_TIMEOUT		1000
 #define OMAP_MMC_OFF_TIMEOUT		8000
+
+/* Errata definitions */
+#define OMAP_HSMMC_ERRATA_I761		BIT(0)
 
 /*
  * One controller can have multiple slots, like on some omap boards using
@@ -251,6 +255,7 @@ struct omap_hsmmc_host {
 	int			use_reg;
 	int			req_in_progress;
 	unsigned int		flags;
+	unsigned int		errata;
 
 	struct	omap_mmc_platform_data	*pdata;
 };
@@ -1021,6 +1026,22 @@ omap_hsmmc_xfer_done(struct omap_hsmmc_host *host, struct mmc_data *data)
 	return;
 }
 
+static int
+omap_hsmmc_errata_i761(struct omap_hsmmc_host *host, struct mmc_command *cmd)
+{
+	u32 rsp10, csre;
+
+	if ((cmd->flags & MMC_RSP_R1) == MMC_RSP_R1
+			|| (host->mmc->card && (mmc_card_sd(host->mmc->card)
+			|| mmc_card_sdio(host->mmc->card))
+			&& (cmd->flags & MMC_RSP_R5))) {
+		rsp10 = OMAP_HSMMC_READ(host->base, RSP10);
+		csre = OMAP_HSMMC_READ(host->base, CSRE);
+		return rsp10 & csre;
+	}
+	return 0;
+}
+
 /*
  * Notify the core about command completion
  */
@@ -1129,7 +1150,8 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 						   unsigned long bit)
 {
 	unsigned long i = 0;
-	unsigned long limit = MMC_TIMEOUT_MS * 1000; /* usecs */
+	unsigned long limit = (loops_per_jiffy *
+				msecs_to_jiffies(MMC_TIMEOUT_MS));
 
 	OMAP_HSMMC_WRITE(host->base, SYSCTL,
 			 OMAP_HSMMC_READ(host->base, SYSCTL) | bit);
@@ -1141,13 +1163,13 @@ static inline void omap_hsmmc_reset_controller_fsm(struct omap_hsmmc_host *host,
 	if (mmc_slot(host).features & HSMMC_HAS_UPDATED_RESET) {
 		while ((!(OMAP_HSMMC_READ(host->base, SYSCTL) & bit))
 					&& (i++ < limit))
-			udelay(1);
+			cpu_relax();
 	}
 	i = 0;
 
 	while ((OMAP_HSMMC_READ(host->base, SYSCTL) & bit) &&
 		(i++ < limit))
-		udelay(1);
+		cpu_relax();
 
 	if (OMAP_HSMMC_READ(host->base, SYSCTL) & bit)
 		dev_err(mmc_dev(host->mmc),
@@ -1237,6 +1259,17 @@ static void omap_hsmmc_do_irq(struct omap_hsmmc_host *host, int status)
 			OMAP_HSMMC_READ(host->base, ADMA_SAL),
 			OMAP_HSMMC_READ(host->base, PSTATE));
 
+	}
+
+	/* Errata i761 */
+	if ((host->errata & OMAP_HSMMC_ERRATA_I761) && host->cmd
+			&& omap_hsmmc_errata_i761(host, host->cmd)) {
+		/* Do the same as for CARD_ERR case */
+		dev_dbg(mmc_dev(host->mmc),
+			"Ignoring card err CMD%d\n", host->cmd->opcode);
+		end_cmd = 1;
+		if (host->data)
+			end_trans = 1;
 	}
 
 	OMAP_HSMMC_WRITE(host->base, STAT, status);
@@ -2438,6 +2471,10 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 	host->power_mode = MMC_POWER_OFF;
 	host->flags	= AUTO_CMD12;
 
+	host->errata = 0;
+	if (cpu_is_omap44xx())
+		host->errata |= OMAP_HSMMC_ERRATA_I761;
+
 	host->master_clock = OMAP_MMC_MASTER_CLOCK;
 	if (mmc_slot(host).features & HSMMC_HAS_48MHZ_MASTER_CLK)
 		host->master_clock = OMAP_MMC_MASTER_CLOCK / 2;
@@ -2535,11 +2572,31 @@ static int __init omap_hsmmc_probe(struct platform_device *pdev)
 
 	/* Since we do only SG emulation, we can have as many segs
 	 * as we want. */
-	mmc->max_segs = 1024;
+//	mmc->max_segs = 1024;
 
-	mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
-	mmc->max_blk_count = 0xFFFF;    /* No. of Blocks is 16 bits */
-	mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+//	mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
+//	mmc->max_blk_count = 0xFFFF;    /* No. of Blocks is 16 bits */
+//	mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+	if (host->dma_type == ADMA_XFER) {
+		/* Worst case is when above block layer gives us 512 segments,
+		  * in which there are 511 single block entries, but one large
+		  * block that is of size mmc->max_req_size - (511*512) bytes.
+		  * In this case, we use the reserved 512 table entries to
+		  * break up the large request. This is also the reason why we
+		  * say we can only handle DMA_TABLE_NUM_ENTRIES/2
+		  * segments instead of DMA_TABLE_NUM_ENTRIES.
+		  */
+		mmc->max_segs = ADMA_TABLE_NUM_ENTRIES/2;
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
+		mmc->max_blk_count = ADMA_MAX_BLKS_PER_ROW *
+		                                        ADMA_TABLE_NUM_ENTRIES/2;
+		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+	} else {
+		mmc->max_segs = ADMA_TABLE_NUM_ENTRIES;
+		mmc->max_blk_size = 512;       /* Block Length at max can be 1024 */
+		mmc->max_blk_count = 0xFFFF;    /* No. of Blocks is 16 bits */
+		mmc->max_req_size = mmc->max_blk_size * mmc->max_blk_count;
+	}
 	mmc->max_seg_size = mmc->max_req_size;
 
 	mmc->caps |= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED |
