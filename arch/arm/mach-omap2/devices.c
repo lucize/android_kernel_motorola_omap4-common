@@ -920,16 +920,6 @@ struct platform_device omap_hdq_device = {
 	.resource	= omap_hdq_resources,
 };
 
-static struct platform_device omap_hdq_dev = {
-	.name = "omap_hdq",
-	.id = 0,
-	.dev = {
-		.platform_data = NULL,
-	},
-	.num_resources	= ARRAY_SIZE(omap_hdq_resources),
-	.resource	= omap_hdq_resources,
-};
-
 void omap_hdq1w_init(struct omap2_hdq_platform_config *pdata)
 {
 	int l;
@@ -962,12 +952,6 @@ void omap_hdq1w_init(struct omap2_hdq_platform_config *pdata)
 	WARN(IS_ERR(od), "Could not build omap_device for %s %s\n",
 	     name, oh_name);
 }
-static inline void omap_hdq_init(void)
-{
-	(void) platform_device_register(&omap_hdq_dev);
-}
-#else
-static inline void omap_hdq_init(void) {}
 #endif
 
 /*---------------------------------------------------------------------------*/
@@ -1095,7 +1079,6 @@ static int __init omap2_init_devices(void)
 	omap_init_mcasp();
 	omap_init_mcspi();
 	omap_init_pmu();
-	omap_hdq_init();
 	omap_init_sti();
 	omap_init_sham();
 	omap_init_aes();
